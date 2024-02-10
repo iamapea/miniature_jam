@@ -11,7 +11,7 @@ function _init()
  world_size_x = 127
  world_size_y = 127
  aim_speed = 0.01
- grav_acc = 0.01
+ grav_acc_bullet = 0.01
  grav_acc_player = 0.04
  -- visual parameters
  col_ch = 10 --crosshair
