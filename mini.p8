@@ -13,6 +13,7 @@ function _init()
  aim_speed = 0.01
  grav_acc_bullet = 0.01
  grav_acc_player = 0.04
+ ground_color = 11
  -- visual parameters
  col_ch = 10 --crosshair
  col_bullet = 6
@@ -28,24 +29,57 @@ end
 function _update60()
  handle_input()
  for p in all(players) do
-  move(p)
-  check_collisions(p)
+  move_player(p)
+  collision_ground(p)
+  collision_edge(p)
+  p.jumps = false
  end
  for b in all(bullets) do
-  move(b)
-  check_collisions(b)
+  move_bullet(b)
+  collision_ground(b)
+		if collision_edge(b) then
+		 b.remove = true
+		end  
  end
+ cleanup_bullets()
 end
 
-function move(t)
+function move_player(t)
+ if not t.jumps and
+    is_on_ground(t) then
+  t.vy = 0
+ else
+  t.vy += t.ay
+ end
+ t.x += t.vx
+ t.y += t.vy
+end
+
+function move_bullet(t)
  t.vy += t.ay
  t.x += t.vx
  t.y += t.vy
+end
+
+function cleanup_bullets()
+ --collect exploded bullets
+ i_delete = {}
+ for i = 1,#bullets do
+  if bullets[i].remove then
+   add(i_delete,i)
+  end
+ end
+ --delete those from table
+ for i in all(i_delete) do
+  deli(bullets,i)
+ end
 end
 -->8
 -- draw --------------------
 function _draw()
  cls(1) --clear screen black (0)
+ --todo remove
+ line(0,120,127,120,ground_color)
  --draw players
  for p in all(players) do
   pset(p.x,p.y,p.c)
@@ -57,6 +91,12 @@ function _draw()
  --draw bullets
  for b in all(bullets) do
   pset(b.x,b.y,col_bullet)
+ end
+ --debug
+ print("bullets: "..#bullets)
+ print("p1 y: "..players[1].y)
+ if players[1].is_airborne then
+  print("p1 airborne")
  end
 end
 -->8
@@ -70,7 +110,11 @@ function new_player(x,y,c,aim)
  it.ay = grav_acc_player
  it.c = c --color
  it.aim = aim
- it.is_airborne = false
+ it.is_explosive = false
+ it.is_airborne = true
+ it.jumps = false
+ it.exploded = false
+ it.remove = false
  return it
 end
 
@@ -81,31 +125,57 @@ function new_bullet(x,y,v,c,aim)
  it.vx = cos(aim)*v --velocity
  it.vy = sin(aim)*v
  it.ay = grav_acc_bullet
+ it.is_explosive = true
+ it.exploded = false
+ it.remove = false
  return it
 end
+
 -->8
 -- physics -------------------
-function check_collisions(t)
- collision_edge(t)
- collision_ground(t)
+function collision_ground(t)
+ -- if current pixel is ground
+ if pget(t.x,t.y)==ground_color then
+  -- move up one pixel
+  t.y = flr(t.y)-1
+  t.is_airborne = false
+  if t.is_explosive then
+   explode(t)
+  end
+ end
 end
 
-function collision_ground(t)
+function is_on_ground(t)
+ -- if pixel below is ground
+ if pget(t.x,t.y+1)==ground_color then
+  t.is_airborne = false
+  return true
+ else
+  t.is_airborne = true
+  return false
+ end
 end
 
 function collision_edge(t)
+ collided = false
  if t.x < 0 then
   t.x = 0
+  collided = true
  elseif t.x > 127 then
   t.x = world_size_x
+  collided = true
  end
  if t.y >= world_size_y then
   t.y = world_size_y
   t.is_airborne = false
- else
-  t.is_airborne = true
- 
+  collided = true
  end
+ return collided
+end
+
+function explode(t)
+ t.exploded = true
+ t.remove = true
 end
 -->8
 -- input --------------------
@@ -138,6 +208,8 @@ function handle_input()
 	 -- jump
 	 if not p.is_airborne and
 	    btn(🅾️,i) then
+	  p.jumps = true
+	  p.is_airborne = true
 	  p.vy = - jump_speed
 	 end
 	end --for i in 1,#players
