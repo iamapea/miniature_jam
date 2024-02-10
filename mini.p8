@@ -13,7 +13,7 @@ function _init()
  aim_speed = 0.01
  grav_acc_bullet = 0.01
  grav_acc_player = 0.04
- ground_color = 11
+ ground_color = 7
  -- visual parameters
  col_ch = 10 --crosshair
  col_bullet = 6
@@ -78,8 +78,6 @@ end
 -- draw --------------------
 function _draw()
  cls(1) --clear screen black (0)
- --todo remove
- line(0,120,127,120,ground_color)
  --draw players
  for p in all(players) do
   pset(p.x,p.y,p.c)
