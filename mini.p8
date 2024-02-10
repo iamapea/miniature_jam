@@ -8,9 +8,12 @@ function _init()
  player_speed_x = 1
  world_size_x = 127
  world_size_y = 127
+ aim_speed = 0.01
+ -- visual parameters
+ col_ch = 10
  -- create players
- p1 = new_player(20,108,8)
- p2 = new_player(108,108,9)
+ p1 = new_player(20,108,8,1)
+ p2 = new_player(108,108,9,.5)
  players = {p1,p2}
 end
 -->8
@@ -30,17 +33,25 @@ end
 -- draw --------------------
 function _draw()
  cls(1) --clear screen black (0)
- 
- pset(p1.x,p1.y,p1.c)
- pset(p2.x,p2.y,p2.c)
+ --draw players
+ for p in all(players) do
+  pset(p.x,p.y,p.c)
+  pset(p.x,p.y,p.c)
+  --draw crosshair
+  pset(p.x+cos(p.aim)*10,
+       p.y+sin(p.aim)*10,col_ch)
+ end
 end
 -->8
 -- things ----------------
-function new_player(x,y,c)
+function new_player(x,y,c,aim)
  it = {}
  it.x = x --position
  it.y = y
+ it.vx = 0 --velocity
+ it.vy = 0
  it.c = c --color
+ it.aim = aim
  return it
 end
 -->8
@@ -74,6 +85,12 @@ function handle_input()
    p.vx = player_speed_x
 	 else
 	  p.vx = 0
+	 end
+	 -- aim
+	 if btn(⬆️,p) then
+	  p.aim += aim_speed
+	 elseif btn(⬇️,p) then
+	  p.aim -= aim_speed
 	 end
 	end --for i in 1,#players
 end
