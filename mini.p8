@@ -2,6 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
 -- init -------------------
+-- hello world!
 function _init()
  -- game constants
  player_speed_x = 1
