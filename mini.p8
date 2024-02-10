@@ -87,9 +87,9 @@ function handle_input()
 	  p.vx = 0
 	 end
 	 -- aim
-	 if btn(⬆️,p) then
+	 if btn(⬆️,i) then
 	  p.aim += aim_speed
-	 elseif btn(⬇️,p) then
+	 elseif btn(⬇️,i) then
 	  p.aim -= aim_speed
 	 end
 	end --for i in 1,#players
