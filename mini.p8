@@ -11,17 +11,38 @@ function _init()
  world_size_x = 127
  world_size_y = 127
  aim_speed = 0.01
+ ground_color = 7
+ ground_height = 20
  grav_acc_bullet = 0.01
  grav_acc_player = 0.04
  -- visual parameters
  col_ch = 10 --crosshair
  col_bullet = 6
  -- create players
- p1 = new_player(20,108,8,1)
+ p1 = new_player(20,108,5,1)
  p2 = new_player(108,108,9,.5)
  players = {p1,p2}
  -- bullets
  bullets = {}
+ -- ground
+ ground = init_ground()
+end
+
+function init_ground()
+ g = {}
+ iy=world_size_y-ground_height
+ for i=iy, world_size_y do
+  g_row = {}
+  ix = 0
+  add(g_row,new_ground(ix,i,ground_color))
+  while ix < world_size_x do
+   ix += 1
+   add(g_row,new_ground(ix,i,ground_color))
+  end
+  add(g,g_row)
+ end
+ 
+ return g
 end
 -->8
 -- update -----------------
@@ -58,9 +79,25 @@ function _draw()
  for b in all(bullets) do
   pset(b.x,b.y,col_bullet)
  end
+ for row in all(ground) do
+  for g in all(row) do
+   pset(g.x,g.y,g.c)
+  end
+ end
 end
 -->8
 -- things ----------------
+function new_ground(x,y,c)
+ it = {}
+ it.x = x --position
+ it.y = y
+ it.vx = 0 --velocity
+ it.vy = 0
+ it.ay = grav_acc
+ it.c = c --color
+ return it
+end
+
 function new_player(x,y,c,aim)
  it = {}
  it.x = x --position
