@@ -6,41 +6,78 @@ __lua__
 function _init()
  -- game constants
  player_speed_x = 1
+ bullet_speed = 1
  world_size_x = 127
  world_size_y = 127
+ aim_speed = 0.01
+ grav_acc = 0.01
+ -- visual parameters
+ col_ch = 10 --crosshair
+ col_bullet = 6
  -- create players
- p1 = new_player(20,108,8)
- p2 = new_player(108,108,9)
+ p1 = new_player(20,108,8,1)
+ p2 = new_player(108,108,9,.5)
  players = {p1,p2}
+ -- bullets
+ bullets = {}
 end
 -->8
 -- update -----------------
-function _update()
+function _update60()
  handle_input()
  for p in all(players) do
   move(p)
   check_collisions(p)
  end
+ for b in all(bullets) do
+  move(b)
+  check_collisions(b)
+ end
 end
 
 function move(t)
+ t.vy += t.ay
  t.x += t.vx
+ t.y += t.vy
 end
 -->8
 -- draw --------------------
 function _draw()
  cls(1) --clear screen black (0)
- 
- pset(p1.x,p1.y,p1.c)
- pset(p2.x,p2.y,p2.c)
+ --draw players
+ for p in all(players) do
+  pset(p.x,p.y,p.c)
+  pset(p.x,p.y,p.c)
+  --draw crosshair
+  pset(p.x+cos(p.aim)*10,
+       p.y+sin(p.aim)*10,col_ch)
+ end
+ --draw bullets
+ for b in all(bullets) do
+  pset(b.x,b.y,col_bullet)
+ end
 end
 -->8
 -- things ----------------
-function new_player(x,y,c)
+function new_player(x,y,c,aim)
  it = {}
  it.x = x --position
  it.y = y
+ it.vx = 0 --velocity
+ it.vy = 0
+ it.ay = grav_acc
  it.c = c --color
+ it.aim = aim
+ return it
+end
+
+function new_bullet(x,y,v,c,aim)
+ it = {}
+ it.x = x
+ it.y = y
+ it.vx = cos(aim)*v --velocity
+ it.vy = sin(aim)*v
+ it.ay = grav_acc
  return it
 end
 -->8
@@ -74,6 +111,18 @@ function handle_input()
    p.vx = player_speed_x
 	 else
 	  p.vx = 0
+	 end
+	 -- aim
+	 if btn(⬆️,i) then
+	  p.aim += aim_speed
+	 elseif btn(⬇️,i) then
+	  p.aim -= aim_speed
+	 end
+	 -- shoot
+	 if btn(❎,i) then
+	  add(bullets,
+	      new_bullet(p.x,p.y,bullet_speed,
+	                 col_bullet,p.aim))
 	 end
 	end --for i in 1,#players
 end
