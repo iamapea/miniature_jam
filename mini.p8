@@ -6,13 +6,15 @@ __lua__
 function _init()
  -- game constants
  player_speed_x = 1
+ jump_speed = 1
  bullet_speed = 1
  world_size_x = 127
  world_size_y = 127
  aim_speed = 0.01
- grav_acc = 0.01
  ground_color = 7
  ground_height = 20
+ grav_acc_bullet = 0.01
+ grav_acc_player = 0.04
  -- visual parameters
  col_ch = 10 --crosshair
  col_bullet = 6
@@ -102,9 +104,10 @@ function new_player(x,y,c,aim)
  it.y = y
  it.vx = 0 --velocity
  it.vy = 0
- it.ay = grav_acc
+ it.ay = grav_acc_player
  it.c = c --color
  it.aim = aim
+ it.is_airborne = false
  return it
 end
 
@@ -114,13 +117,17 @@ function new_bullet(x,y,v,c,aim)
  it.y = y
  it.vx = cos(aim)*v --velocity
  it.vy = sin(aim)*v
- it.ay = grav_acc
+ it.ay = grav_acc_bullet
  return it
 end
 -->8
 -- physics -------------------
 function check_collisions(t)
  collision_edge(t)
+ collision_ground(t)
+end
+
+function collision_ground(t)
 end
 
 function collision_edge(t)
@@ -129,8 +136,12 @@ function collision_edge(t)
  elseif t.x > 127 then
   t.x = world_size_x
  end
- if t.y > world_size_y then
+ if t.y >= world_size_y then
   t.y = world_size_y
+  t.is_airborne = false
+ else
+  t.is_airborne = true
+ 
  end
 end
 -->8
@@ -160,6 +171,11 @@ function handle_input()
 	  add(bullets,
 	      new_bullet(p.x,p.y,bullet_speed,
 	                 col_bullet,p.aim))
+	 end
+	 -- jump
+	 if not p.is_airborne and
+	    btn(🅾️,i) then
+	  p.vy = - jump_speed
 	 end
 	end --for i in 1,#players
 end
