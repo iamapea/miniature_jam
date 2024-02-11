@@ -17,6 +17,7 @@ function _init()
  ground_top_y = world_size_y+ground_height+1
  grav_acc_bullet = 0.01
  grav_acc_player = 0.05
+ grav_acc_particle = 0.01
  cooldown_bullet = 60
  lives = 5
  player_spawn_y = world_size_y-ground_height-50
@@ -34,6 +35,8 @@ function _init()
  players = {p1,p2}
  -- bullets
  bullets = {}
+ -- particles
+ particles = {}
  -- ground
  ground_x_offset = 2 --start groundleft of screen, so you don't see the border during screen-shake
  ground = init_ground()
@@ -102,6 +105,7 @@ function _update60()
 		end  
  end
  collision_bullets(p)
+ update_particles()
  cleanup_bullets()
  update_state()
 end
@@ -136,10 +140,31 @@ function cleanup_bullets()
   deli(bullets,i)
  end
 end
+
+function update_particles()
+ i_particles_to_remove = {}
+ for i = 1,#particles do
+  c = particles[i]
+  c.vy += c.ay
+  c.x += c.vx
+  c.y += c.vy
+  c.dur -= 1
+  if c.dur < 0 then
+   add(i_particles_to_remove,i)
+  end
+ end
+ for i in all(i_particles_to_remove) do
+  deli(particles,i)
+ end
+end
 -->8
 -- draw --------------------
 function _draw()
  cls(1) --clear screen black (0)
+ --draw particles
+ for c in all(particles) do
+  pset(c.x,c.y,c.c)
+ end
  --draw ground
  for row in all(ground) do
   for g in all(row) do
@@ -175,6 +200,7 @@ function _draw()
         40,64,players[winner].c)
  end
  -- debug
+ print("n particles: "..#particles,2,10)
  --print(debug_str,0,10)
  --pset(debug_pxl[0],debug_pxl[1],7)
 end
@@ -245,6 +271,18 @@ function new_bullet(x,y,v,c,aim)
  return it
 end
 
+function new_particle(x,y,vx,vy,c,dur)
+ it = {}
+ it.x = x
+ it.y = y
+ it.vx = vx
+ it.vy = vy
+ it.ay = grav_acc_particle
+ it.c = c
+ it.dur = dur--duration in frames
+ return it
+end
+
 function ground_exists(x,y)
  --check if a ground at x,y exists
  --.. there must be a better way to index 2d array...
@@ -265,6 +303,19 @@ function ground_exists(x,y)
  end
  return false
 end
+
+function create_particles(x,y,c)
+ n_particles = 12
+ duration_frames = 30
+ v_max = 0.5
+ for i = 1,n_particles do
+  vx = rnd(2*v_max)-v_max 
+  vy = rnd(2*v_max)-v_max 
+  add(particles,
+      new_particle(x,y,vx,vy,c,
+                   duration_frames))
+ end
+end
 -->8
 -- physics -------------------
 function collision_ground(t)
@@ -272,6 +323,7 @@ function collision_ground(t)
 -- if pget(t.x,t.y)==ground_color then
  if ground_exists(t.x,t.y) then
   if t.is_explosive then
+   create_particles(t.x,t.y,ground_color)
    explode(t)
   end
   --todo fix going into ground when at lower screen edge
