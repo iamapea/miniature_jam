@@ -239,6 +239,19 @@ function new_bullet(x,y,v,c,aim)
  return it
 end
 
+function ground_exists(x,y)
+ --check if a ground at x,y exists
+ --.. there must be a better way to index 2d array...
+ for row in ground do
+  if row==6 then
+   for col in row do
+    if col==7 then
+     return col.exists
+    end
+   end
+  end
+ end
+end
 -->8
 -- physics -------------------
 function collision_ground(t)
