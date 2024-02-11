@@ -12,7 +12,8 @@ function _init()
  world_size_x = 127
  world_size_y = 127
  aim_speed = 0.015
- ground_color = 4
+ ground_color = 3
+ ground_color2 = 11
  ground_height = 20
  ground_top_y = world_size_y+ground_height+1
  grav_acc_bullet = 0.01
@@ -57,7 +58,11 @@ function init_ground()
   ix = -ground_x_offset
   add(g_row,new_ground(ix,i,ground_color))
   while ix <= world_size_x+ground_x_offset do
-   add(g_row,new_ground(ix,i,ground_color))
+   col_cur = ground_color
+   if rnd(1) < .1 then
+    col_cur = ground_color2
+   end
+   add(g_row,new_ground(ix,i,col_cur))
    ix += 1
   end
   add(g,g_row)
@@ -161,7 +166,14 @@ end
 -- draw --------------------
 function _draw()
  cls(0) --clear screen black (0)
+ --draw city background
  map(0,5,0,0,32,32)
+ --draw "water" underground
+ y_lines = {109,114,118,121,124,126,127,128}
+ y_colors = {1 ,1  ,5  ,5  ,4  ,4,  4,  4}
+ for l = 1,#y_lines do
+  line(-2,y_lines[l],world_size_x+2,y_lines[l],y_colors[l])
+ end
  --draw particles
  for c in all(particles) do
   pset(c.x,c.y,c.c)
