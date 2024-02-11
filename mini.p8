@@ -33,6 +33,9 @@ function _init()
  bullets = {}
  -- ground
  ground = init_ground()
+ --screen shake variables
+ intensity = 0
+ shake_control = 5
 end
 
 function init_ground()
@@ -48,12 +51,30 @@ function init_ground()
   end
   add(g,g_row)
  end
- 
+  
  return g
 end
 -->8
 -- update -----------------
 function _update60()
+ --run shake when intensity high
+ if intensity > 0 then shake() end
+
+ --up, increase shake
+ --if btnp(⬆️)
+ --and shake_control < 10 then
+ -- shake_control += 1
+ --end
+
+ --down, decrease shake
+ --if btnp(⬇️)
+ --and shake_control > 0 then
+ -- shake_control -= 1
+ --end
+
+ --x, trigger shake
+ --if btnp(❎) then intensity += shake_control end 
+
  handle_input()
  for p in all(players) do
   move_player(p)
@@ -128,6 +149,18 @@ function _draw()
  end
  -- debug
  --print(players[1].aim)
+end
+
+function shake()
+ local shake_x=rnd(intensity) - (intensity /2)
+ local shake_y=rnd(intensity) - (intensity /2)
+
+ --offset the camera
+ camera( shake_x, shake_y )
+
+ --ease shake and return to normal
+ intensity *= .9
+ if intensity < .3 then intensity = 0 end
 end
 -->8
 -- things ----------------
@@ -220,6 +253,8 @@ end
 function explode(t)
  t.exploded = true
  t.remove = true
+ -- trigger screen shake
+ intensity += shake_control
  --check distance to ground pixels
  for row in all(ground) do
   for g in all(row) do
