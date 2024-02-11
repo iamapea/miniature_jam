@@ -101,6 +101,14 @@ end
 -- draw --------------------
 function _draw()
  cls(1) --clear screen black (0)
+ --draw ground
+ for row in all(ground) do
+  for g in all(row) do
+   if g.exists then
+    pset(g.x,g.y,g.c)
+   end
+  end
+ end
  --draw players
  for p in all(players) do
   pset(p.x,p.y,p.c)
@@ -112,14 +120,6 @@ function _draw()
  --draw bullets
  for b in all(bullets) do
   pset(b.x,b.y,col_bullet)
- end
- --draw ground
- for row in all(ground) do
-  for g in all(row) do
-   if g.exists then
-    pset(g.x,g.y,g.c)
-   end
-  end
  end
 end
 -->8
