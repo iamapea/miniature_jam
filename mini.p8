@@ -24,10 +24,10 @@ function _init()
  -- create players
  p1 = new_player(20,player_spawn_y,
                  col_players[1],
-                 -.5)
+                 -.5,0)
  p2 = new_player(108,player_spawn_y,
                  col_players[2],
-                 .5)
+                 .5,0)
  players = {p1,p2}
  -- bullets
  bullets = {}
@@ -179,7 +179,8 @@ function new_ground(x,y,c)
  return it
 end
 
-function new_player(x,y,c,aim)
+function new_player(x,y,c,aim,
+                    cool)
  it = {}
  it.x = x --position
  it.y = y
@@ -188,7 +189,7 @@ function new_player(x,y,c,aim)
  it.ay = grav_acc_player
  it.c = c --color
  it.aim = aim
- it.cooldown = 0
+ it.cooldown = cool
  it.is_explosive = false
  it.is_airborne = true
  it.jumps = false
@@ -282,11 +283,12 @@ function kill_player(index)
  else
   spawn_aim = -.5
  end
+ cd_tmp=players[index].cooldown
  players[index] = 
    new_player(flr(rnd(120))+3,
               player_spawn_y,
               col_players[index],
-              spawn_aim)
+              spawn_aim,cd_tmp)
 end
 -->8
 -- input --------------------
