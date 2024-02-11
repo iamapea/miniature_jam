@@ -22,22 +22,30 @@ function _init()
  cooldown_bullet = 30
  charge_max = 1
  charge_per_frame = 0.02
- charge_start = 0.1
+ charge_start = 0.2
  lives = 5
  player_spawn_y = world_size_y-ground_height-50
  -- visual parameters
  col_players = {8,12}
+ col_players2 = {2,1} --second shade for text etc.
  col_ch = 6 --crosshair
  col_bullet = 9
- col_charge_outer = 14
- col_charge_inner = 8
+ col_charge_outer = {14,6}
+ --col_charge_inner = {8, 13}
+ col_charge_inner = col_charge_outer
  -- create players
  p1 = new_player(1,20,player_spawn_y,
                  col_players[1],
-                 -.5,0,lives)
+                 col_players2[1],
+                 -.5,0,lives,
+                 col_charge_outer[1],
+                 col_charge_inner[1])
  p2 = new_player(2,108,player_spawn_y,
                  col_players[2],
-                 .5,0,lives)
+                 col_players2[2],
+                 .5,0,lives,
+                 col_charge_outer[2],
+                 col_charge_inner[2])
  players = {p1,p2}
  -- bullets
  bullets = {}
@@ -203,15 +211,15 @@ function _draw()
      s = scaling / n_outer_lines
 	    line(p.x,p.y,
 	         p.x+p.charge*cos(p.aim/2+0.25-ang*s)*10,
-	         p.y+p.charge*sin(p.aim/2+0.25-ang*s)*10,col_charge_outer)
+	         p.y+p.charge*sin(p.aim/2+0.25-ang*s)*10,p.col_charge_outer)
 	    line(p.x,p.y,
 	         p.x+p.charge*cos(p.aim/2+0.25+ang*s)*10,
-	         p.y+p.charge*sin(p.aim/2+0.25+ang*s)*10,col_charge_outer)
+	         p.y+p.charge*sin(p.aim/2+0.25+ang*s)*10,p.col_charge_outer)
 	   end
     -- inner lines
     line(p.x,p.y,
          p.x+p.charge*cos(p.aim/2+0.25)*10,
-         p.y+p.charge*sin(p.aim/2+0.25)*10,col_charge_inner)
+         p.y+p.charge*sin(p.aim/2+0.25)*10,p.col_charge_inner)
    end
    --draw player
    pset(p.x,p.y,p.c)
@@ -228,14 +236,14 @@ function _draw()
  pos_x = {3,123}
  pos_y = {3,3}
  for i = 1,#players do
-  print(players[i].lives,
+  pprint(players[i].lives,
         pos_x[i],pos_y[i],
-        players[i].c)
+        players[i].c,players[i].c2)
  end
  -- game over screen
  if state == "over" then
-  print("player "..winner.." wins!",
-        36,50,players[winner].c)
+  pprint("player "..winner.." wins!",
+        36,50,players[winner].c,players[winner].c2)
  end
  -- debug
  --print("n particles: "..#particles,2,10)
@@ -272,8 +280,9 @@ function new_ground(x,y,c)
  return it
 end
 
-function new_player(n,x,y,c,aim,
-                    cool,lives)
+function new_player(n,x,y,c,c2,aim,
+                    cool,lives,
+                    cco,cci)
  it = {}
  it.n = n --player number
  it.x = x --position
@@ -282,10 +291,11 @@ function new_player(n,x,y,c,aim,
  it.vy = 0
  it.ay = grav_acc_player
  it.c = c --color
+ it.c2 = c2 --second color 4 txt
  it.aim = aim
  it.charge = charge_start
- it.charge_color_inner = cci
- it.charge_color_outer = cco
+ it.col_charge_inner = cci
+ it.col_charge_outer = cco
  it.charges = false
  it.cooldown = cool
  it.lives = lives
@@ -518,8 +528,11 @@ function respawn(idx)
   new_player(idx,flr(rnd(120))+3,
              player_spawn_y,
              col_players[idx],
+             col_players2[idx],
              spawn_aim,cd_tmp,
-             lives_tmp)
+             lives_tmp,
+             col_charge_outer[idx],
+             col_charge_inner[idx])
 end
 -->8
 -- input --------------------
@@ -615,6 +628,15 @@ end
 function distance(a,b)
  return sqrt((a.x - b.x)^2 +
              (a.y - b.y)^2)
+end
+
+-- pretty print
+function pprint(string,x,y,col1,col2)
+ --todo: get width and center align optionally
+ color(col2)
+ print(string, x-1, y+1)
+ color(col1)
+ print(string, x, y) 
 end
 
 -- sound effects:
