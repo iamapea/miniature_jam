@@ -14,6 +14,7 @@ function _init()
  aim_speed = 0.015
  ground_color = 4
  ground_height = 20
+ ground_top_y = world_size_y+ground_height+1
  grav_acc_bullet = 0.01
  grav_acc_player = 0.05
  cooldown_bullet = 60
@@ -34,12 +35,15 @@ function _init()
  -- bullets
  bullets = {}
  -- ground
+ ground_x_offset = 2 --start groundleft of screen, so you don't see the border during screen-shake
  ground = init_ground()
  --screen shake variables
  intensity = 0
  shake_control = 5
  --state variables
  winner = nil --idx of player when state == over
+ debug_str = ""
+ debug_pxl = {0,0}
 end
 
 function init_ground()
@@ -47,9 +51,9 @@ function init_ground()
  iy=world_size_y-ground_height
  for i=iy, world_size_y+2 do
   g_row = {}
-  ix = -2
+  ix = -ground_x_offset
   add(g_row,new_ground(ix,i,ground_color))
-  while ix <= world_size_x+2 do
+  while ix <= world_size_x+ground_x_offset do
    add(g_row,new_ground(ix,i,ground_color))
    ix += 1
   end
@@ -158,7 +162,7 @@ function _draw()
   pset(b.x,b.y,col_bullet)
  end
  --draw lives
- pos_x = {3,124}
+ pos_x = {3,123}
  pos_y = {3,3}
  for i = 1,#players do
   print(players[i].lives,
@@ -171,7 +175,8 @@ function _draw()
         40,64,players[winner].c)
  end
  -- debug
- --print(players[1].aim)
+ --print(debug_str,0,10)
+ --pset(debug_pxl[0],debug_pxl[1],7)
 end
 
 function shake()
@@ -199,6 +204,7 @@ function new_ground(x,y,c)
  it.ay = grav_acc
  it.c = c --color
  it.exists = true
+ it.debug = false
  return it
 end
 
@@ -242,21 +248,29 @@ end
 function ground_exists(x,y)
  --check if a ground at x,y exists
  --.. there must be a better way to index 2d array...
- for row in ground do
-  if row==6 then
-   for col in row do
-    if col==7 then
-     return col.exists
+ i_y = y-world_size_y+ground_height+1
+ i_x = x+ground_x_offset+2
+ for i_row = 1,#ground do
+  if i_row==flr(i_y) then
+   row = ground[i_row]
+   for i_col = 1,#row do
+    if i_col==flr(i_x) then
+     --todo: remove
+     debug_pxl[0] = row[i_col].x
+     debug_pxl[1] = row[i_col].y
+     return row[i_col].exists
     end
    end
   end
  end
+ return false
 end
 -->8
 -- physics -------------------
 function collision_ground(t)
  -- if current pixel is ground
- if pget(t.x,t.y)==ground_color then
+-- if pget(t.x,t.y)==ground_color then
+ if ground_exists(t.x,t.y) then
   if t.is_explosive then
    explode(t)
   end
@@ -267,7 +281,8 @@ function collision_ground(t)
    t.vy = 0
   else
    --move up out of ground
-   while  pget(t.x,t.y)==ground_color do
+   --while  pget(t.x,t.y)==ground_color do
+   while ground_exists(t.x,t.y) do
     t.y = flr(t.y)-1
    end
    t.is_airborne = false
@@ -277,7 +292,8 @@ end
 
 function is_on_ground(t)
  -- if pixel below is ground
- if pget(t.x,t.y+1)==ground_color then
+ --if pget(t.x,t.y+1)==ground_color then
+ if ground_exists(t.x,t.y+1) then
   t.is_airborne = false
   return true
  else
@@ -306,20 +322,20 @@ function collision_edge(t)
 end
 
 function collision_left(t)
- if pget(t.x-1,t.y)==ground_color and
-    pget(t.x-1,t.y-1)==ground_color and
-   (pget(t.x-1,t.y-2)==ground_color or
-    pget(t.x,  t.y-1)==ground_color) then
+ if ground_exists(t.x-1,t.y) and
+    ground_exists(t.x-1,t.y-1) and
+   (ground_exists(t.x-1,t.y-2) or
+    ground_exists(t.x,  t.y-1)) then
   return true
  end
  return false
 end
 
 function collision_right(t)
- if pget(t.x+1,t.y)==ground_color and
-    pget(t.x+1,t.y-1)==ground_color and
-   (pget(t.x+1,t.y-2)==ground_color or
-    pget(t.x,  t.y-1)==ground_color) then
+ if ground_exists(t.x+1,t.y) and
+    ground_exists(t.x+1,t.y-1) and
+   (ground_exists(t.x+1,t.y-2) or
+    ground_exists(t.x,  t.y-1)) then
   return true
  end
  return false
