@@ -59,8 +59,7 @@ end
 function _update60()
  --run shake when intensity high
  if intensity > 0 then shake() end
- --scale up player size on shake
- player_size = intensity/4.2
+
  --up, increase shake
  --if btnp(⬆️)
  --and shake_control < 10 then
@@ -91,6 +90,7 @@ function _update60()
 		 b.remove = true
 		end  
  end
+ collision_bullets(p)
  cleanup_bullets()
 end
 
@@ -139,11 +139,7 @@ function _draw()
  --draw players
  for p in all(players) do
   pset(p.x,p.y,p.c)
-  --draw bigger player during shake
-  pset(p.x-player_size,p.y,p.c)
-  pset(p.x+player_size,p.y,p.c)
-  pset(p.x,p.y-player_size,p.c)
-  --pset(p.x,p.y+player_size,p.c)
+  pset(p.x,p.y,p.c)
   --draw crosshair
   pset(p.x+cos(p.aim/2+0.25)*10,
        p.y+sin(p.aim/2+0.25)*10,col_ch)
@@ -214,6 +210,7 @@ function new_bullet(x,y,v,c,aim)
  it.is_explosive = true
  it.exploded = false
  it.remove = false
+ it.launch_time = time()
  return it
 end
 
@@ -286,6 +283,34 @@ function collision_right(t)
   return true
  end
  return false
+end
+
+function collision_bullets()
+ i_bullets_exp = {}
+ --ceck collision between bullets
+ for i = 1,#bullets do
+  for j = 1,#bullets do
+   if not i == j then
+    if distance(bullets[i],
+                bullets[j]) < 1.5 then
+     add(i_bullets_exp,i)
+     add(i_bullets_exp,j)
+     --todo fix
+    end
+   end
+  end
+  for j = 1,#players do
+   if distance(bullets[i],
+               players[j]) < 1.5 and
+      time()-bullets[i].launch_time > 0.1 then
+    add(i_bullets_exp,i)
+   end
+  end
+ end
+ -- explode collided bullets
+ for i in all(i_bullets_exp) do
+  explode(bullets[i])
+ end
 end
 
 function explode(t)
@@ -390,9 +415,3 @@ __gfx__
 00077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00700700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-__sfx__
-000100000000000000160000000000000000000d000000000a000000001500000000000000b000120000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-8a0100000000000000175001550014500145001450009500105000f500065000d5000a50000000075000050000000000000000000000000000000000000000000000000000000000000000000000000000000000
-__music__
-00 40414344
-
