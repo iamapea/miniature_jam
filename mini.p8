@@ -18,10 +18,10 @@ function _init()
  grav_acc_player = 0.05
  cooldown_bullet = 60
  lives = 5
- player_spawn_y = world_size_y-ground_height-20
+ player_spawn_y = world_size_y-ground_height-50
  -- visual parameters
- col_players = {8,9}
- col_ch = 10 --crosshair
+ col_players = {8,12}
+ col_ch = 6 --crosshair
  col_bullet = 6
  -- create players
  p1 = new_player(1,20,player_spawn_y,
@@ -83,7 +83,10 @@ function _update60()
  for p in all(players) do
   move_player(p)
   collision_ground(p)
-  collision_edge(p)
+  if collision_edge(p)==2 then
+   --collision bottom screen edge
+   handle_death(p.n)
+  end
   if (p.cooldown>0) p.cooldown-=1
   p.jumps = false
  end
@@ -271,18 +274,20 @@ function is_on_ground(t)
 end
 
 function collision_edge(t)
+ --returns 1 for coll left/right
+ -- .. and 2 for coll bottom
  collided = false
  if t.x < 0 then
   t.x = 0
-  collided = true
+  collided = 1
  elseif t.x > 127 then
   t.x = world_size_x
-  collided = true
+  collided = 1
  end
  if t.y >= world_size_y then
   t.y = world_size_y
   t.is_airborne = false
-  collided = true
+  collided = 2
  end
  return collided
 end
