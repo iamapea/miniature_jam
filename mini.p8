@@ -210,7 +210,7 @@ function collision_edge(t)
   collided = true
  end
  if t.y >= world_size_y then
-  t.y = world_size_y
+  t.y = world_size_y-1
   t.is_airborne = false
   collided = true
  end
