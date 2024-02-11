@@ -111,9 +111,12 @@ function _draw()
  for b in all(bullets) do
   pset(b.x,b.y,col_bullet)
  end
+ --draw ground
  for row in all(ground) do
   for g in all(row) do
-   pset(g.x,g.y,g.c)
+   if g.exists then
+    pset(g.x,g.y,g.c)
+   end
   end
  end
 end
@@ -127,6 +130,7 @@ function new_ground(x,y,c)
  it.vy = 0
  it.ay = grav_acc
  it.c = c --color
+ it.exists = true
  return it
 end
 
@@ -154,6 +158,7 @@ function new_bullet(x,y,v,c,aim)
  it.vx = cos(aim)*v --velocity
  it.vy = sin(aim)*v
  it.ay = grav_acc_bullet
+ it.exp_rad = 4 --explosion radius
  it.is_explosive = true
  it.exploded = false
  it.remove = false
@@ -205,6 +210,14 @@ end
 function explode(t)
  t.exploded = true
  t.remove = true
+ --check distance to ground pixels
+ for row in all(ground) do
+  for g in all(row) do
+   if distance(g,t) < t.exp_rad then
+    g.exists = false
+   end
+  end
+ end
 end
 -->8
 -- input --------------------
@@ -245,9 +258,9 @@ function handle_input()
 end
 -->8
 -- util -----------------
-function distance(t1,t2)
- return sqrt((t1.x - t2.x)^2 +
-             (t1.y - t2.y)^2)
+function distance(a,b)
+ return sqrt((a.x - b.x)^2 +
+             (a.y - b.y)^2)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
