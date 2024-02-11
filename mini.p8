@@ -41,7 +41,7 @@ end
 function init_ground()
  g = {}
  iy=world_size_y-ground_height
- for i=iy, world_size_y+1 do
+ for i=iy, world_size_y+2 do
   g_row = {}
   ix = -2
   add(g_row,new_ground(ix,i,ground_color))
@@ -217,11 +217,13 @@ end
 function collision_ground(t)
  -- if current pixel is ground
  if pget(t.x,t.y)==ground_color then
-  if t.vy < 0 then
-   --move down out of ground
-   while  pget(t.x,t.y)==ground_color do
-    t.y = flr(t.y)+1
-   end
+  if t.is_explosive then
+   explode(t)
+  end
+  --todo fix going into ground when at lower screen edge
+  if t.vy < 0 and 
+     t.y < world_size_y-1 then
+   t.y = flr(t.y)+1
    t.vy = 0
   else
    --move up out of ground
@@ -229,9 +231,6 @@ function collision_ground(t)
     t.y = flr(t.y)-1
    end
    t.is_airborne = false
-  end
-  if t.is_explosive then
-   explode(t)
   end
  end
 end
