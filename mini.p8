@@ -163,7 +163,6 @@ function _draw()
         players[i].c)
  end
  -- game over screen
- print(#players)
  if state == "over" then
   print("player "..winner.." wins!",
         40,64,players[winner].c)
