@@ -34,31 +34,7 @@ function _init()
  col_players2 = {2,1} --second shade for text etc.
  col_ch = 6 --crosshair
  col_bullet = 9
-<<<<<<< HEAD
- col_charge_outer = 14
- col_charge_inner = 8
- -- create players
- p1 = new_player(1,20,player_spawn_y,
-                 col_players[1],
-                 -.5,0,lives)
- p2 = new_player(2,108,player_spawn_y,
-                 col_players[2],
-                 .5,0,lives)
- players = {p1,p2}
- -- bullets
- bullets = {}
- -- particles
- particles = {}
- -- ground
- ground_x_offset = 2 --start groundleft of screen, so you don't see the border during screen-shake
- ground = init_ground()
- --screen shake variables
- intensity = 0
- shake_control = 5
- --state variables
- winner = nil --idx of player when state == over
- debug_str = ""
- debug_pxl = {0,0}
+
  --clouds
  cloud_anim = {38,37,36,35,34,33,32}
  c1 = new_cloud(60,85,1,cloud_anim,0)
@@ -69,14 +45,13 @@ function _init()
  c6 = new_cloud(125,45,6,cloud_anim,0)
  c7 = new_cloud(45,65,7,cloud_anim,0)
  clouds = {c1,c2,c3,c4,c5,c6,c7}
-=======
+
  col_charge_outer = {14,6}
  --col_charge_inner = {8, 13}
  col_charge_inner = col_charge_outer
  cam_y = -100
  camera(0,cam_y)
  restart() --rest of init
->>>>>>> main
 end
 
 function init_ground()
