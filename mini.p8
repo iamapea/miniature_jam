@@ -45,9 +45,9 @@ function init_ground()
   g_row = {}
   ix = 0
   add(g_row,new_ground(ix,i,ground_color))
-  while ix < world_size_x do
-   ix += 1
+  while ix <= world_size_x do
    add(g_row,new_ground(ix,i,ground_color))
+   ix += 1
   end
   add(g,g_row)
  end
@@ -160,7 +160,10 @@ function shake()
 
  --ease shake and return to normal
  intensity *= .9
- if intensity < .3 then intensity = 0 end
+ if intensity < .3 then 
+  intensity = 0 
+  camera(0,0)
+ end
 end
 -->8
 -- things ----------------
