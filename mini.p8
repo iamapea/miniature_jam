@@ -4,30 +4,32 @@ __lua__
 -- init -------------------
 -- hello world!
 function _init()
+ state = "play"
  -- game constants
  player_speed_x = 0.3
  jump_speed = 1
  bullet_speed = 1
  world_size_x = 127
  world_size_y = 127
- aim_speed = 0.01
+ aim_speed = 0.015
  ground_color = 13
  ground_height = 20
  grav_acc_bullet = 0.01
- grav_acc_player = 0.04
+ grav_acc_player = 0.05
  cooldown_bullet = 60
+ lives = 5
  player_spawn_y = world_size_y-ground_height-20
  -- visual parameters
  col_players = {8,9}
  col_ch = 10 --crosshair
  col_bullet = 6
  -- create players
- p1 = new_player(20,player_spawn_y,
+ p1 = new_player(1,20,player_spawn_y,
                  col_players[1],
-                 -.5,0)
- p2 = new_player(108,player_spawn_y,
+                 -.5,0,lives)
+ p2 = new_player(2,108,player_spawn_y,
                  col_players[2],
-                 .5,0)
+                 .5,0,lives)
  players = {p1,p2}
  -- bullets
  bullets = {}
@@ -36,6 +38,8 @@ function _init()
  --screen shake variables
  intensity = 0
  shake_control = 5
+ --state variables
+ winner = nil --idx of player when state == over
 end
 
 function init_ground()
@@ -92,6 +96,7 @@ function _update60()
  end
  collision_bullets(p)
  cleanup_bullets()
+ update_state()
 end
 
 function move_player(t)
@@ -138,15 +143,30 @@ function _draw()
  end
  --draw players
  for p in all(players) do
-  pset(p.x,p.y,p.c)
-  pset(p.x,p.y,p.c)
-  --draw crosshair
-  pset(p.x+cos(p.aim/2+0.25)*10,
-       p.y+sin(p.aim/2+0.25)*10,col_ch)
+  if p.exists then
+	  pset(p.x,p.y,p.c)
+	  --draw crosshair
+	  pset(p.x+cos(p.aim/2+0.25)*10,
+	       p.y+sin(p.aim/2+0.25)*10,col_ch)
+	 end
  end
  --draw bullets
  for b in all(bullets) do
   pset(b.x,b.y,col_bullet)
+ end
+ --draw lives
+ pos_x = {3,124}
+ pos_y = {3,3}
+ for i = 1,#players do
+  print(players[i].lives,
+        pos_x[i],pos_y[i],
+        players[i].c)
+ end
+ -- game over screen
+ print(#players)
+ if state == "over" then
+  print("player "..winner.." wins!",
+        40,64,players[winner].c)
  end
  -- debug
  --print(players[1].aim)
@@ -180,9 +200,10 @@ function new_ground(x,y,c)
  return it
 end
 
-function new_player(x,y,c,aim,
-                    cool)
+function new_player(n,x,y,c,aim,
+                    cool,lives)
  it = {}
+ it.n = n --player number
  it.x = x --position
  it.y = y
  it.vx = 0 --velocity
@@ -191,10 +212,12 @@ function new_player(x,y,c,aim,
  it.c = c --color
  it.aim = aim
  it.cooldown = cool
+ it.lives = lives
  it.is_explosive = false
  it.is_airborne = true
  it.jumps = false
  it.exploded = false
+ it.exists = true
  it.remove = false
  return it
 end
@@ -327,27 +350,48 @@ function explode(t)
   end
  end
  --check distance to players
+ i_dead_players = {}
  for i = 1,#players do
   p = players[i]
   if distance(p,t) < t.exp_rad then
-   kill_player(i)
+   if handle_death(i) then
+    add(i_dead_players,i)
+   end
   end
+ end
+ --remove players w/o lives left
+ for i in all(i_dead_players) do
+  players[i].exists = false
  end
 end
 
-function kill_player(index)
+function handle_death(idx)
+ -- if a player has no lives,
+ --its index is returned
  spawn_x = flr(rnd(100))+14
  if spawn_x > 64 then
   spawn_aim = .5
  else
   spawn_aim = -.5
  end
- cd_tmp=players[index].cooldown
- players[index] = 
-   new_player(flr(rnd(120))+3,
-              player_spawn_y,
-              col_players[index],
-              spawn_aim,cd_tmp)
+ players[idx].lives -= 1
+ if players[idx].lives == 0 then
+  return idx
+ else
+  respawn(idx)
+ end
+ return nil
+end
+
+function respawn(idx)
+ cd_tmp=players[idx].cooldown
+ lives_tmp=players[idx].lives
+ players[idx] = 
+  new_player(idx,flr(rnd(120))+3,
+             player_spawn_y,
+             col_players[idx],
+             spawn_aim,cd_tmp,
+             lives_tmp)
 end
 -->8
 -- input --------------------
@@ -403,7 +447,23 @@ function handle_input()
 	end --for i in 1,#players
 end
 -->8
--- util -----------------
+-- game state and util -------
+function update_state()
+ if state == "play" then
+  --only surviving player wins
+  i_existing = {}
+  for i = 1,#players do
+   if players[i].exists then
+    add(i_existing,i)
+   end
+  end
+  if #i_existing == 1 then
+   winner = i_existing[1]
+   state = "over"
+  end
+ end
+end
+
 function distance(a,b)
  return sqrt((a.x - b.x)^2 +
              (a.y - b.y)^2)
