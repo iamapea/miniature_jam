@@ -197,10 +197,10 @@ function _draw()
  -- game over screen
  if state == "over" then
   print("player "..winner.." wins!",
-        40,64,players[winner].c)
+        36,50,players[winner].c)
  end
  -- debug
- print("n particles: "..#particles,2,10)
+ --print("n particles: "..#particles,2,10)
  --print(debug_str,0,10)
  --pset(debug_pxl[0],debug_pxl[1],7)
 end
@@ -305,7 +305,7 @@ function ground_exists(x,y)
 end
 
 function create_particles(x,y,c)
- n_particles = 12
+ n_particles = 20
  duration_frames = 30
  v_max = 0.5
  for i = 1,n_particles do
@@ -323,7 +323,6 @@ function collision_ground(t)
 -- if pget(t.x,t.y)==ground_color then
  if ground_exists(t.x,t.y) then
   if t.is_explosive then
-   create_particles(t.x,t.y,ground_color)
    explode(t)
   end
   --todo fix going into ground when at lower screen edge
@@ -403,7 +402,6 @@ function collision_bullets()
                 bullets[j]) < 1.5 then
      add(i_bullets_exp,i)
      add(i_bullets_exp,j)
-     --todo fix
     end
    end
   end
@@ -424,6 +422,7 @@ end
 function explode(t)
  sfx(0)
  sfx(2)
+ b_particles_created = false
  t.exploded = true
  t.remove = true
  -- trigger screen shake
@@ -433,6 +432,11 @@ function explode(t)
   for g in all(row) do
    if distance(g,t) < t.exp_rad then
     g.exists = false
+    if not b_particles_created then
+     --explosion particles in ground color
+     create_particles(t.x,t.y,ground_color)
+     b_particles_created = true
+    end
    end
   end
  end
@@ -440,6 +444,8 @@ function explode(t)
  for i = 1,#players do
   p = players[i]
   if distance(p,t) < t.exp_rad then
+   --explosion particles in player color
+   create_particles(p.x,p.y,p.c)
    handle_death(i)
   end
  end
