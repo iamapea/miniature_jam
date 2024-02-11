@@ -16,15 +16,18 @@ function _init()
  grav_acc_bullet = 0.01
  grav_acc_player = 0.04
  cooldown_bullet = 60
+ player_spawn_y = world_size_y-ground_height-20
  -- visual parameters
+ col_players = {8,9}
  col_ch = 10 --crosshair
  col_bullet = 6
  -- create players
- p1 = new_player(20,world_size_y-ground_height,
-                 5,.5)
- p2 = new_player(108,world_size_y-ground_height,
-                 9,.5)
- p2.looks_left = true
+ p1 = new_player(20,player_spawn_y,
+                 col_players[1],
+                 -.5)
+ p2 = new_player(108,player_spawn_y,
+                 col_players[2],
+                 .5)
  players = {p1,p2}
  -- bullets
  bullets = {}
@@ -137,13 +140,8 @@ function _draw()
   pset(p.x,p.y,p.c)
   pset(p.x,p.y,p.c)
   --draw crosshair
---  if p.looks_left then
-   pset(p.x+cos(p.aim/2+0.25)*10,
-        p.y+sin(p.aim/2+0.25)*10,col_ch)
---  else
---   pset(p.x-cos(p.aim/2+0.25)*10,
---        p.y+sin(p.aim/2+0.25)*10,col_ch)
---  end
+  pset(p.x+cos(p.aim/2+0.25)*10,
+       p.y+sin(p.aim/2+0.25)*10,col_ch)
  end
  --draw bullets
  for b in all(bullets) do
@@ -187,7 +185,6 @@ function new_player(x,y,c,aim)
  it.ay = grav_acc_player
  it.c = c --color
  it.aim = aim
- it.looks_left = false
  it.cooldown = 0
  it.is_explosive = false
  it.is_airborne = true
@@ -266,6 +263,27 @@ function explode(t)
    end
   end
  end
+ --check distance to players
+ for i = 1,#players do
+  p = players[i]
+  if distance(p,t) < t.exp_rad then
+   kill_player(i)
+  end
+ end
+end
+
+function kill_player(index)
+ spawn_x = flr(rnd(100))+14
+ if spawn_x > 64 then
+  spawn_aim = .5
+ else
+  spawn_aim = -.5
+ end
+ players[index] = 
+   new_player(flr(rnd(120))+3,
+              player_spawn_y,
+              col_players[index],
+              spawn_aim)
 end
 -->8
 -- input --------------------
