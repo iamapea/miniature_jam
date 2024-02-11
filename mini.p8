@@ -11,18 +11,20 @@ function _init()
  world_size_x = 127
  world_size_y = 127
  aim_speed = 0.01
- ground_color = 7
+ ground_color = 13
  ground_height = 20
  grav_acc_bullet = 0.01
  grav_acc_player = 0.04
  cooldown_bullet = 60
- ground_color = 7
  -- visual parameters
  col_ch = 10 --crosshair
  col_bullet = 6
  -- create players
- p1 = new_player(20,108,5,1)
- p2 = new_player(108,108,9,.5)
+ p1 = new_player(20,world_size_y-ground_height,
+                 5,.5)
+ p2 = new_player(108,world_size_y-ground_height,
+                 9,.5)
+ p2.looks_left = true
  players = {p1,p2}
  -- bullets
  bullets = {}
@@ -114,13 +116,20 @@ function _draw()
   pset(p.x,p.y,p.c)
   pset(p.x,p.y,p.c)
   --draw crosshair
-  pset(p.x+cos(p.aim)*10,
-       p.y+sin(p.aim)*10,col_ch)
+--  if p.looks_left then
+   pset(p.x+cos(p.aim/2+0.25)*10,
+        p.y+sin(p.aim/2+0.25)*10,col_ch)
+--  else
+--   pset(p.x-cos(p.aim/2+0.25)*10,
+--        p.y+sin(p.aim/2+0.25)*10,col_ch)
+--  end
  end
  --draw bullets
  for b in all(bullets) do
   pset(b.x,b.y,col_bullet)
  end
+ -- debug
+ --print(players[1].aim)
 end
 -->8
 -- things ----------------
@@ -145,6 +154,7 @@ function new_player(x,y,c,aim)
  it.ay = grav_acc_player
  it.c = c --color
  it.aim = aim
+ it.looks_left = false
  it.cooldown = 0
  it.is_explosive = false
  it.is_airborne = true
@@ -158,8 +168,8 @@ function new_bullet(x,y,v,c,aim)
  it = {}
  it.x = x
  it.y = y
- it.vx = cos(aim)*v --velocity
- it.vy = sin(aim)*v
+ it.vx = cos(aim/2+0.25)*v --velocity
+ it.vy = sin(aim/2+0.25)*v
  it.ay = grav_acc_bullet
  it.exp_rad = 4 --explosion radius
  it.is_explosive = true
@@ -230,19 +240,31 @@ function handle_input()
   p = players[i+1]
   -- accelerate x
 	 if (btn(⬅️,i) and
-	 	  not btn(➡️,i)) then 
+	 	  not btn(➡️,i)) then
+	 	if (p.aim<0) p.aim=-p.aim
 	  p.vx = -player_speed_x
 	 elseif (btn(➡️,i) and
 	 	      not btn(⬅️,i)) then
+	 	if (p.aim>0) p.aim=-p.aim
    p.vx = player_speed_x
 	 else
 	  p.vx = 0
 	 end
 	 -- aim
 	 if btn(⬆️,i) then
-	  p.aim += aim_speed
+	  if p.aim>0+aim_speed and
+	     p.aim<1 then
+    p.aim -= aim_speed
+   elseif p.aim < -aim_speed then
+	   p.aim += aim_speed
+	  end
 	 elseif btn(⬇️,i) then
-	  p.aim -= aim_speed
+	  if p.aim>0 and
+	     p.aim<1-aim_speed then
+	   p.aim += aim_speed
+   elseif p.aim<0 and p.aim>-1+aim_speed then
+    p.aim -= aim_speed
+   end
 	 end
 	 -- shoot
 	 if btn(❎,i) and
