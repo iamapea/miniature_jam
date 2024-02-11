@@ -24,10 +24,10 @@ function _init()
  -- create players
  p1 = new_player(20,player_spawn_y,
                  col_players[1],
-                 -.5)
+                 -.5,0)
  p2 = new_player(108,player_spawn_y,
                  col_players[2],
-                 .5)
+                 .5,0)
  players = {p1,p2}
  -- bullets
  bullets = {}
@@ -41,13 +41,13 @@ end
 function init_ground()
  g = {}
  iy=world_size_y-ground_height
- for i=iy, world_size_y do
+ for i=iy, world_size_y+2 do
   g_row = {}
-  ix = 0
+  ix = -2
   add(g_row,new_ground(ix,i,ground_color))
-  while ix < world_size_x do
-   ix += 1
+  while ix <= world_size_x+2 do
    add(g_row,new_ground(ix,i,ground_color))
+   ix += 1
   end
   add(g,g_row)
  end
@@ -61,7 +61,6 @@ function _update60()
  if intensity > 0 then shake() end
  --scale up player size on shake
  player_size = intensity/4.2
- 
  --up, increase shake
  --if btnp(⬆️)
  --and shake_control < 10 then
@@ -166,7 +165,10 @@ function shake()
 
  --ease shake and return to normal
  intensity *= .9
- if intensity < .3 then intensity = 0 end
+ if intensity < .3 then 
+  intensity = 0 
+  camera(0,0)
+ end
 end
 -->8
 -- things ----------------
@@ -182,7 +184,8 @@ function new_ground(x,y,c)
  return it
 end
 
-function new_player(x,y,c,aim)
+function new_player(x,y,c,aim,
+                    cool)
  it = {}
  it.x = x --position
  it.y = y
@@ -191,7 +194,7 @@ function new_player(x,y,c,aim)
  it.ay = grav_acc_player
  it.c = c --color
  it.aim = aim
- it.cooldown = 0
+ it.cooldown = cool
  it.is_explosive = false
  it.is_airborne = true
  it.jumps = false
@@ -219,11 +222,20 @@ end
 function collision_ground(t)
  -- if current pixel is ground
  if pget(t.x,t.y)==ground_color then
-  -- move up one pixel
-  t.y = flr(t.y)-1
-  t.is_airborne = false
   if t.is_explosive then
    explode(t)
+  end
+  --todo fix going into ground when at lower screen edge
+  if t.vy < 0 and 
+     t.y < world_size_y-1 then
+   t.y = flr(t.y)+1
+   t.vy = 0
+  else
+   --move up out of ground
+   while  pget(t.x,t.y)==ground_color do
+    t.y = flr(t.y)-1
+   end
+   t.is_airborne = false
   end
  end
 end
@@ -256,6 +268,26 @@ function collision_edge(t)
  return collided
 end
 
+function collision_left(t)
+ if pget(t.x-1,t.y)==ground_color and
+    pget(t.x-1,t.y-1)==ground_color and
+   (pget(t.x-1,t.y-2)==ground_color or
+    pget(t.x,  t.y-1)==ground_color) then
+  return true
+ end
+ return false
+end
+
+function collision_right(t)
+ if pget(t.x+1,t.y)==ground_color and
+    pget(t.x+1,t.y-1)==ground_color and
+   (pget(t.x+1,t.y-2)==ground_color or
+    pget(t.x,  t.y-1)==ground_color) then
+  return true
+ end
+ return false
+end
+
 function explode(t)
  t.exploded = true
  t.remove = true
@@ -285,11 +317,12 @@ function kill_player(index)
  else
   spawn_aim = -.5
  end
+ cd_tmp=players[index].cooldown
  players[index] = 
    new_player(flr(rnd(120))+3,
               player_spawn_y,
               col_players[index],
-              spawn_aim)
+              spawn_aim,cd_tmp)
 end
 -->8
 -- input --------------------
@@ -302,10 +335,12 @@ function handle_input()
 	 	  not btn(➡️,i)) then
 	 	if (p.aim<0) p.aim=-p.aim
 	  p.vx = -player_speed_x
+   if (collision_left(p)) p.vx=0
 	 elseif (btn(➡️,i) and
 	 	      not btn(⬅️,i)) then
 	 	if (p.aim>0) p.aim=-p.aim
    p.vx = player_speed_x
+   if (collision_right(p)) p.vx=0
 	 else
 	  p.vx = 0
 	 end
