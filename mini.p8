@@ -41,11 +41,11 @@ end
 function init_ground()
  g = {}
  iy=world_size_y-ground_height
- for i=iy, world_size_y do
+ for i=iy, world_size_y+1 do
   g_row = {}
-  ix = 0
+  ix = -2
   add(g_row,new_ground(ix,i,ground_color))
-  while ix <= world_size_x do
+  while ix <= world_size_x+2 do
    add(g_row,new_ground(ix,i,ground_color))
    ix += 1
   end
