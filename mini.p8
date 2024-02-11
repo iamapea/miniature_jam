@@ -12,7 +12,7 @@ function _init()
  world_size_x = 127
  world_size_y = 127
  aim_speed = 0.015
- ground_color = 13
+ ground_color = 4
  ground_height = 20
  grav_acc_bullet = 0.01
  grav_acc_player = 0.05
@@ -22,7 +22,7 @@ function _init()
  -- visual parameters
  col_players = {8,12}
  col_ch = 6 --crosshair
- col_bullet = 6
+ col_bullet = 10
  -- create players
  p1 = new_player(1,20,player_spawn_y,
                  col_players[1],
@@ -356,24 +356,17 @@ function explode(t)
   end
  end
  --check distance to players
- i_dead_players = {}
  for i = 1,#players do
   p = players[i]
   if distance(p,t) < t.exp_rad then
-   if handle_death(i) then
-    add(i_dead_players,i)
-   end
+   handle_death(i)
   end
- end
- --remove players w/o lives left
- for i in all(i_dead_players) do
-  players[i].exists = false
  end
 end
 
 function handle_death(idx)
- -- if a player has no lives,
- --its index is returned
+ -- respawn player if lives left
+ -- or mark as non-existent
  sfx(3)
  spawn_x = flr(rnd(100))+14
  if spawn_x > 64 then
@@ -382,12 +375,11 @@ function handle_death(idx)
   spawn_aim = -.5
  end
  players[idx].lives -= 1
- if players[idx].lives == 0 then
-  return idx
+ if players[idx].lives <= 0 then
+  players[idx].exists = false
  else
   respawn(idx)
  end
- return nil
 end
 
 function respawn(idx)
@@ -472,6 +464,10 @@ function update_state()
    winner = i_existing[1]
    state = "over"
   end
+ end
+ -- cleanup
+ for p in all(players) do
+  if (p.lives < 0) p.lives = 0
  end
 end
 
