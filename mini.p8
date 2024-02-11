@@ -5,7 +5,7 @@ __lua__
 -- hello world!
 function _init()
  -- game constants
- player_speed_x = 1
+ player_speed_x = 0.3
  jump_speed = 1
  bullet_speed = 1
  world_size_x = 127
@@ -15,6 +15,7 @@ function _init()
  ground_height = 20
  grav_acc_bullet = 0.01
  grav_acc_player = 0.04
+ cooldown_bullet = 60
  ground_color = 7
  -- visual parameters
  col_ch = 10 --crosshair
@@ -53,6 +54,7 @@ function _update60()
   move_player(p)
   collision_ground(p)
   collision_edge(p)
+  if (p.cooldown>0) p.cooldown-=1
   p.jumps = false
  end
  for b in all(bullets) do
@@ -143,6 +145,7 @@ function new_player(x,y,c,aim)
  it.ay = grav_acc_player
  it.c = c --color
  it.aim = aim
+ it.cooldown = 0
  it.is_explosive = false
  it.is_airborne = true
  it.jumps = false
@@ -242,10 +245,12 @@ function handle_input()
 	  p.aim -= aim_speed
 	 end
 	 -- shoot
-	 if btn(❎,i) then
+	 if btn(❎,i) and
+	    p.cooldown == 0 then
 	  add(bullets,
 	      new_bullet(p.x,p.y,bullet_speed,
 	                 col_bullet,p.aim))
+	  p.cooldown += cooldown_bullet
 	 end
 	 -- jump
 	 if not p.is_airborne and
