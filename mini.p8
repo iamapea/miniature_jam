@@ -217,9 +217,19 @@ end
 function collision_ground(t)
  -- if current pixel is ground
  if pget(t.x,t.y)==ground_color then
-  -- move up one pixel
-  t.y = flr(t.y)-1
-  t.is_airborne = false
+  if t.vy < 0 then
+   --move down out of ground
+   while  pget(t.x,t.y)==ground_color do
+    t.y = flr(t.y)+1
+   end
+   t.vy = 0
+  else
+   --move up out of ground
+   while  pget(t.x,t.y)==ground_color do
+    t.y = flr(t.y)-1
+   end
+   t.is_airborne = false
+  end
   if t.is_explosive then
    explode(t)
   end
@@ -252,6 +262,26 @@ function collision_edge(t)
   collided = true
  end
  return collided
+end
+
+function collision_left(t)
+ if pget(t.x-1,t.y)==ground_color and
+    pget(t.x-1,t.y-1)==ground_color and
+   (pget(t.x-1,t.y-2)==ground_color or
+    pget(t.x,  t.y-1)==ground_color) then
+  return true
+ end
+ return false
+end
+
+function collision_right(t)
+ if pget(t.x+1,t.y)==ground_color and
+    pget(t.x+1,t.y-1)==ground_color and
+   (pget(t.x+1,t.y-2)==ground_color or
+    pget(t.x,  t.y-1)==ground_color) then
+  return true
+ end
+ return false
 end
 
 function explode(t)
@@ -301,10 +331,12 @@ function handle_input()
 	 	  not btn(➡️,i)) then
 	 	if (p.aim<0) p.aim=-p.aim
 	  p.vx = -player_speed_x
+   if (collision_left(p)) p.vx=0
 	 elseif (btn(➡️,i) and
 	 	      not btn(⬅️,i)) then
 	 	if (p.aim>0) p.aim=-p.aim
    p.vx = player_speed_x
+   if (collision_right(p)) p.vx=0
 	 else
 	  p.vx = 0
 	 end
