@@ -7,7 +7,8 @@ __lua__
 function _init()
  --states: title,pan,play,over
  state = "title"
- version = "0.2"
+ version = "0.3b" --b:beta
+ --changes: clouds, wavy ground
  -- game constants
  player_speed_x = 0.3
  jump_speed = 1
@@ -17,7 +18,7 @@ function _init()
  aim_speed = 0.015
  ground_color = 3
  ground_color2 = 11
- ground_height = 20
+ ground_height = 30
  ground_top_y = world_size_y+ground_height+1
  grav_acc_bullet = 0.01
  grav_acc_player = 0.05
@@ -56,17 +57,35 @@ end
 
 function init_ground()
  g = {}
- iy=world_size_y-ground_height
- for i=iy, world_size_y+2 do
+ --create wavy function
+ gfunc = {}
+ sign = random_sign()
+ jitter={rnd(4),rnd(4),rnd(4)}
+ for i = -ground_x_offset,
+     world_size_x+ground_x_offset do
+  add(gfunc, sin(i/(18+jitter[1])) *sign+
+             1.5*cos(i/(47+jitter[2])) *sign+
+             sin(i/(70+jitter[3])) *sign)
+ end
+ --create ground pixels
+ y_top=world_size_y-ground_height
+ for i=y_top, world_size_y+2 do
   g_row = {}
   ix = -ground_x_offset
   add(g_row,new_ground(ix,i,ground_color))
   while ix <= world_size_x+ground_x_offset do
+   -- randomly color pixel
    col_cur = ground_color
    if rnd(1) < .1 then
     col_cur = ground_color2
    end
+   -- add ground pixel
    add(g_row,new_ground(ix,i,col_cur))
+   -- remove if above wavy function
+   if 2 * gfunc[ix+ground_x_offset+1]
+      > i-y_top - 6  then
+    g_row[#g_row].exists = false
+   end
    ix += 1
   end
   add(g,g_row)
@@ -112,21 +131,6 @@ end
 function _update60()
  --run shake when intensity high
  if intensity > 0 then shake() end
-
- --up, increase shake
- --if btnp(⬆️)
- --and shake_control < 10 then
- -- shake_control += 1
- --end
-
- --down, decrease shake
- --if btnp(⬇️)
- --and shake_control > 0 then
- -- shake_control -= 1
- --end
-
- --x, trigger shake
- --if btnp(❎) then intensity += shake_control end 
 
  --cloud anim
  for cloud in all(clouds) do
@@ -736,6 +740,11 @@ function pprint(string,x,y,col1,col2)
  print(string, x-1, y+1)
  color(col1)
  print(string, x, y) 
+end
+
+function random_sign()
+ -- randomly 1 or -1
+ return flr(rnd(2))*2-1
 end
 
 -- sound effects:
